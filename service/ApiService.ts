@@ -8,6 +8,7 @@ export interface IApiService {
   get<T>(url: string, config?: AxiosRequestConfig): Promise<T>;
   post<T>(url: string, data?: T, config?: AxiosRequestConfig): Promise<T>;
   patch<T>(url: string, data?: T, config?: AxiosRequestConfig): Promise<T>;
+  put<T>(url: string, data?: T, config?: AxiosRequestConfig): Promise<T>;
   delete<T>(url: string, config?: AxiosRequestConfig): Promise<T>;
 }
 
@@ -23,7 +24,7 @@ export function isApiClientError(error: unknown): error is AxiosError {
   return Axios.isAxiosError(error);
 }
 
-export class ApiService {
+export class ApiService implements IApiService {
   private client: AxiosInstance;
 
   constructor() {
@@ -64,6 +65,23 @@ export class ApiService {
   }
 
   async patch<T = any, D = any>(
+    url: string,
+    data?: D,
+    config?: AxiosRequestConfig,
+  ): Promise<T> {
+    try {
+      const response: AxiosResponse<T> = await this.client.patch<
+        T,
+        AxiosResponse<T>,
+        D
+      >(url, data, config);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async put<T = any, D = any>(
     url: string,
     data?: D,
     config?: AxiosRequestConfig,
