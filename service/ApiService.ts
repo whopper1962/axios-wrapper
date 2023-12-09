@@ -4,14 +4,6 @@ import { onRequest } from "./interceptors/onRequest";
 import { onResponse } from "./interceptors/onResponse";
 import { onErrorResponse } from "./interceptors/onErrorResponse";
 
-export interface IApiService {
-  get<T>(url: string, config?: AxiosRequestConfig): Promise<T>;
-  post<T>(url: string, data?: T, config?: AxiosRequestConfig): Promise<T>;
-  patch<T>(url: string, data?: T, config?: AxiosRequestConfig): Promise<T>;
-  put<T>(url: string, data?: T, config?: AxiosRequestConfig): Promise<T>;
-  delete<T>(url: string, config?: AxiosRequestConfig): Promise<T>;
-}
-
 export const ErrorStatusCode = {
   UNAUTHORIZED: 401,
   FORBIDDEN: 403,
@@ -20,40 +12,44 @@ export const ErrorStatusCode = {
 export type ErrorStatusCode =
   (typeof ErrorStatusCode)[keyof typeof ErrorStatusCode];
 
-export function isApiClientError(error: unknown): error is AxiosError {
+export const isApiClientError = (error: unknown): error is AxiosError => {
   return Axios.isAxiosError(error);
-}
+};
 
-export class ApiService implements IApiService {
-  private client: AxiosInstance;
+export class ApiService {
+  private _client: AxiosInstance;
 
   constructor() {
-    this.client = Axios.create({
+    this._client = Axios.create({
       // baseURL: import.meta.env.VITE_API_BASE_URL,
       baseURL: "http://localhost:3000",
       responseType: "json" as const,
       timeout: 30000,
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
     });
-    this.client.interceptors.request.use(onRequest);
-    this.client.interceptors.response.use(onResponse, onErrorResponse);
+    this._client.interceptors.request.use(onRequest);
+    this._client.interceptors.response.use(onResponse, onErrorResponse);
   }
 
-  async get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
+  protected async get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
     try {
-      const response: AxiosResponse<T> = await this.client.get<T>(url, config);
+      const response: AxiosResponse<T> = await this._client.get<T>(url, config);
       return response.data;
     } catch (error) {
       throw error;
     }
   }
 
-  async post<T = any, D = any>(
+  protected async post<T = any, D = any>(
     url: string,
     data?: D,
     config?: AxiosRequestConfig,
   ): Promise<T> {
     try {
-      const response: AxiosResponse<T> = await this.client.post<
+      const response: AxiosResponse<T> = await this._client.post<
         T,
         AxiosResponse<T>,
         D
@@ -64,13 +60,13 @@ export class ApiService implements IApiService {
     }
   }
 
-  async patch<T = any, D = any>(
+  protected async patch<T = any, D = any>(
     url: string,
     data?: D,
     config?: AxiosRequestConfig,
   ): Promise<T> {
     try {
-      const response: AxiosResponse<T> = await this.client.patch<
+      const response: AxiosResponse<T> = await this._client.patch<
         T,
         AxiosResponse<T>,
         D
@@ -81,26 +77,15 @@ export class ApiService implements IApiService {
     }
   }
 
-  async put<T = any, D = any>(
+  protected async delete<T>(
     url: string,
-    data?: D,
     config?: AxiosRequestConfig,
   ): Promise<T> {
     try {
-      const response: AxiosResponse<T> = await this.client.patch<
-        T,
-        AxiosResponse<T>,
-        D
-      >(url, data, config);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  async delete<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
-    try {
-      const response: AxiosResponse<T> = await this.client.post<T>(url, config);
+      const response: AxiosResponse<T> = await this._client.post<T>(
+        url,
+        config,
+      );
       return response.data;
     } catch (error) {
       throw error;

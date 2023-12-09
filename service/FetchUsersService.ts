@@ -11,10 +11,6 @@ type FetchUsersPrams = {
 };
 
 class FetchUsersService extends ApiService {
-  constructor() {
-    super();
-  }
-
   async execute(params: FetchUsersPrams): Promise<User> {
     return await this.get<User>("/users", { params });
   }
