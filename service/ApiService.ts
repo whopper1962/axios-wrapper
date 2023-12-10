@@ -17,7 +17,7 @@ export const isApiClientError = (error: unknown): error is AxiosError => {
 };
 
 export class ApiService {
-  private _client: AxiosInstance;
+  private readonly _client: AxiosInstance;
 
   constructor() {
     this._client = Axios.create({
